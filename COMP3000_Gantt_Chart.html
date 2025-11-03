@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COMP3000 Project Gantt Chart</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .project-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .info-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card h3 {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .info-card p {
+            font-size: 16px;
+            color: #212529;
+            font-weight: 600;
+        }
+
+        .gantt-wrapper {
+            padding: 30px;
+            overflow-x: auto;
+        }
+
+        .gantt-chart {
+            min-width: 1000px;
+        }
+
+        .gantt-header {
+            display: grid;
+            grid-template-columns: 300px repeat(20, 1fr);
+            gap: 2px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .week-label {
+            text-align: center;
+            padding: 8px 4px;
+            background: #e9ecef;
+            border-radius: 4px;
+            color: #495057;
+        }
+
+        .task-label {
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .gantt-row {
+            display: grid;
+            grid-template-columns: 300px repeat(20, 1fr);
+            gap: 2px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .task-name {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .week-cell {
+            height: 50px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .task-bar {
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: visible;
+        }
+
+        .task-bar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .task-bar::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #212529;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            margin-bottom: 5px;
+            z-index: 1000;
+        }
+
+        .task-bar:hover::after {
+            opacity: 1;
+        }
+
+        .phase-1 { background: #4CAF50; }
+        .phase-2 { background: #2196F3; }
+        .phase-3 { background: #FF9800; }
+        .phase-4 { background: #9C27B0; }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-text {
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .milestone {
+            background: #dc3545 !important;
+            position: relative;
+        }
+
+        .milestone::before {
+            content: '◆';
+            font-size: 20px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 22px;
+            }
+            
+            .project-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>COMP3000 Project Gantt Chart</h1>
+            <p>Integration of a Local Large Language Model Framework for Real-Time NPC Dialogue Generation</p>
+        </div>
+
+        <div class="project-info">
+            <div class="info-card">
+                <h3>Student</h3>
+                <p>Mehmet Isitmen</p>
+            </div>
+            <div class="info-card">
+                <h3>Programme</h3>
+                <p>BSc Computer Science (AI)</p>
+            </div>
+            <div class="info-card">
+                <h3>Duration</h3>
+                <p>20 Weeks</p>
+            </div>
+            <div class="info-card">
+                <h3>Timeline</h3>
+                <p>Nov 2025 - Apr 2026</p>
+            </div>
+        </div>
+
+        <div class="gantt-wrapper">
+            <div class="gantt-chart">
+                <div class="gantt-header">
+                    <div class="task-label">Project Phases & Tasks</div>
+                    <div class="week-label">W1</div>
+                    <div class="week-label">W2</div>
+                    <div class="week-label">W3</div>
+                    <div class="week-label">W4</div>
+                    <div class="week-label">W5</div>
+                    <div class="week-label">W6</div>
+                    <div class="week-label">W7</div>
+                    <div class="week-label">W8</div>
+                    <div class="week-label">W9</div>
+                    <div class="week-label">W10</div>
+                    <div class="week-label">W11</div>
+                    <div class="week-label">W12</div>
+                    <div class="week-label">W13</div>
+                    <div class="week-label">W14</div>
+                    <div class="week-label">W15</div>
+                    <div class="week-label">W16</div>
+                    <div class="week-label">W17</div>
+                    <div class="week-label">W18</div>
+                    <div class="week-label">W19</div>
+                    <div class="week-label">W20</div>
+                </div>
+
+                <!-- Phase 1 -->
+                <div class="gantt-row">
+                    <div class="task-name"><strong>Phase 1:</strong> Literature Review</div>
+                    <div class="week-cell"><div class="task-bar phase-1" data-tooltip="Literature Review" style="grid-column: span 4;">Weeks 1-4</div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">Environment Configuration</div>
+                    <div class="week-cell"><div class="task-bar phase-1" data-tooltip="Setup Development Environment" style="grid-column: span 4;"></div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">Baseline Model Benchmarking</div>
+                    <div class="week-cell"><div class="task-bar phase-1" data-tooltip="Test Llama 3, Mistral 7B, Phi-3" style="grid-column: span 4;"></div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <!-- Phase 2 -->
+                <div class="gantt-row">
+                    <div class="task-name"><strong>Phase 2:</strong> Middleware Design</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-2" data-tooltip="Design Communication Layer" style="grid-column: span 5;">Weeks 5-9</div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">Engine Integration (Unity/Unreal)</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-2" data-tooltip="Connect LLM to Game Engine" style="grid-column: span 5;"></div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">Initial Prototype Development</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-2" data-tooltip="Build Working Prototype" style="grid-column: span 5;"></div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <!-- Phase 3 -->
+                <div class="gantt-row">
+                    <div class="task-name"><strong>Phase 3:</strong> Fine-Tuning (QLoRA)</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-3" data-tooltip="Fine-tune on Game Lore Dataset" style="grid-column: span 5;">Weeks 10-14</div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">Performance Optimisation</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-3" data-tooltip="Token Streaming, CUDA Optimization" style="grid-column: span 5;"></div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">Memory System Implementation</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-3" data-tooltip="RAG System & Persistent Storage" style="grid-column: span 5;"></div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">Internal Testing</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-3" data-tooltip="System Testing & Debugging" style="grid-column: span 5;"></div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <!-- Phase 4 -->
+                <div class="gantt-row">
+                    <div class="task-name"><strong>Phase 4:</strong> Empirical Evaluation</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-4" data-tooltip="Performance Metrics Collection" style="grid-column: span 6;">Weeks 15-20</div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">User Study & Testing</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-4" data-tooltip="Conduct User Evaluations" style="grid-column: span 6;"></div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">Final Analysis & Results</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-4" data-tooltip="Statistical Analysis" style="grid-column: span 6;"></div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">Dissertation Writing</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-4" data-tooltip="Compile Dissertation" style="grid-column: span 6;"></div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <div class="gantt-row">
+                    <div class="task-name">Presentation Preparation</div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"><div class="task-bar phase-4" data-tooltip="Prepare Final Presentation" style="grid-column: span 2;"></div></div>
+                    <div class="week-cell"></div>
+                </div>
+
+                <!-- Continuous Activities -->
+                <div class="gantt-row" style="margin-top: 20px;">
+                    <div class="task-name" style="background: #fff3cd; border-left: 4px solid #ffc107;"><strong>Ongoing:</strong> Documentation & GitHub Commits</div>
+                    <div class="week-cell"><div class="task-bar" data-tooltip="Weekly Progress Logs" style="background: #ffc107; grid-column: span 20; opacity: 0.5;">Continuous (Weeks 1-20)</div></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                    <div class="week-cell"></div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color phase-1"></div>
+                    <span class="legend-text">Phase 1: Literature Review & Benchmarking</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color phase-2"></div>
+                    <span class="legend-text">Phase 2: Architecture Design & Integration</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color phase-3"></div>
+                    <span class="legend-text">Phase 3: Fine-Tuning & Optimisation</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color phase-4"></div>
+                    <span class="legend-text">Phase 4: Evaluation & Reporting</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffc107; opacity: 0.5;"></div>
+                    <span class="legend-text">Ongoing Activities</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
