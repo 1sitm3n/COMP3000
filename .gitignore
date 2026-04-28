@@ -1,0 +1,56 @@
+﻿# ===== Unreal Engine =====
+[Bb]inaries/
+[Bb]uild/
+[Dd]erivedDataCache/
+[Ii]ntermediate/
+[Ss]aved/
+
+*.obj
+*.pdb
+*.exe
+*.dll
+*.lib
+*.a
+*.so
+*.dylib
+
+.vs/
+.idea/
+*.sln
+*.suo
+*.xcodeproj
+*.xcworkspace
+
+*.VC.db
+*.opensdf
+*.opendb
+*.sdf
+*.user
+
+# ===== Python / Middleware =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.env
+.pytest_cache/
+.mypy_cache/
+
+# ===== llama.cpp model files =====
+*.gguf
+*.bin
+models/
+
+# ===== OS junk =====
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ===== Editor backups =====
+*.bak
+*.swp
+*.swo
+*~
