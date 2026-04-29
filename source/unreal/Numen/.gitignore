@@ -1,0 +1,44 @@
+﻿# Visual Studio / Rider / IDE files
+.vs/
+.idea/
+.vscode/
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.opendb
+*.VC.db
+*.VC.opendb
+*.user
+*.xcodeproj/
+*.xcworkspace/
+
+# UE generated
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+Script/
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# Build artefacts
+*.obj
+*.pdb
+*.exe
+*.dll
+*.lib
+*.a
+*.so
+*.dylib
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor backups
+*.bak
+*.tmp
+*~
