@@ -1,0 +1,38 @@
+{
+  "tier_0_personal": {
+    "description": "Personal facts about the NPC themselves — only this NPC knows these.",
+    "facts": []
+  },
+  "tier_1_local": {
+    "description": "Facts known to anyone living at St. Damson's institute — daily routines, who's friends with whom, what's served at meals.",
+    "facts": [
+      "St. Damson's training day begins at sunrise with a horn from the gate tower.",
+      "The midday meal is taken in the Great Hall; instructors and squires eat at separate tables.",
+      "Knight-Instructor Marek favours a longsword in single combat but teaches the spear to initiates first."
+    ]
+  },
+  "tier_2_regional": {
+    "description": "Facts known across the local barony — village affairs, recent travelers, regional politics.",
+    "facts": [
+      "The barony of Aethelford has been at peace for three years following the death of Baron Cedric.",
+      "A travelling merchant from the Free Cities passes through every spring carrying news from the south.",
+      "The road to the western coast is unsafe after dark due to brigands operating from the Greywood."
+    ]
+  },
+  "tier_3_national": {
+    "description": "Facts known to educated people across the kingdom — court politics, royal succession, major military movements.",
+    "facts": [
+      "King Aldred III sits the Iron Throne; his only heir is Princess Elara, recently betrothed to a foreign prince.",
+      "The Knight-Commander of the realm is Sir Halric of the Vale, who took the office after the Conclave of Stormhold.",
+      "Tensions with the eastern kingdom of Vethros have escalated; envoys were recalled in late winter."
+    ]
+  },
+  "tier_4_scholarly": {
+    "description": "Facts known only to scholars, senior knights, or those with formal education in lore — historical events, theological doctrine, ancient agreements.",
+    "facts": [
+      "The Concord of Aethelmere (year 412) bound the Kingdom and the Free Cities to mutual non-aggression for a hundred years; it expires in two years.",
+      "The Order of St. Damson was founded after the Battle of Hollowfen, when the saint himself defended a hundred orphans from a routing army.",
+      "Theological doctrine holds that the seven knightly virtues mirror the seven aspects of the divine; this is contested by the eastern Vethrosi tradition."
+    ]
+  }
+}
