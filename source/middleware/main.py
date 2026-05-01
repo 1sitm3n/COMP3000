@@ -100,8 +100,9 @@ def construct_prompt(npc_id: str, utterance: str) -> str:
 
     prompt_parts.extend([
         "",
-        "If asked about something outside what you know, say honestly that you do not know.",
-        "Do not invent facts. Do not speculate beyond your knowledge.",
+        "If the traveller asks about something outside what you know, say honestly that you do not know. Do not invent facts. Do not speculate beyond your knowledge.",
+        "",
+        "If the traveller mentions a name, place, title, institution, or event that you have not been told about above, treat it as unfamiliar. Do not pretend to recognise it, do not speculate about it, do not invent details. Ask the traveller what they mean, or simply say you have not heard of it. Even if the term sounds plausible for your world, if it is not in what you know, you do not know it.",
         "",
         f"A traveller addresses you: \"{utterance}\"",
         "",
