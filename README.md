@@ -38,8 +38,7 @@ study/        Participant study materials (consent, questionnaires, transcripts,
 Currently in active development for May 2026 deadline. See commit history and Issues for sprint progress.
 
 ## Generative AI Use
-
-This project uses generative AI tools under the "Assisted Work" provisions of the COMP3000 assignment brief (categories A2, A3, A5, A6, A7, A8, A9). All such use is logged and declared in the project report''s appendix.
+To be declared at the end. 
 
 ## License
 
