@@ -133,7 +133,8 @@ def root():
 
 
 @app.post("/dialogue", response_model=DialogueResponse)
-def dialogue(request: DialogueRequest):
+async def dialogue(request: DialogueRequest):
+    print(f"[REQUEST] npc_id={request.npc_id!r} utterance={request.utterance!r}")
     """
     Main endpoint. Receives an NPC id and player utterance, returns the NPC's
     response.
