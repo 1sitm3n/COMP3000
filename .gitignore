@@ -54,3 +54,5 @@ Desktop.ini
 *.swp
 *.swo
 *~
+# Local inference engine — large binaries and model weights
+source/inference/

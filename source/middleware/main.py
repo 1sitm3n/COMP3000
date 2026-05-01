@@ -13,8 +13,17 @@ the central robustness claim of this project.
 import json
 from pathlib import Path
 
+import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+# -----------------------------------------------------------------------------
+# LLM inference endpoint. llama-server runs locally on port 8080, exposing an
+# OpenAI-compatible /v1/chat/completions endpoint.
+# -----------------------------------------------------------------------------
+
+LLAMA_SERVER_URL = "http://127.0.0.1:8080/v1/chat/completions"
+LLAMA_REQUEST_TIMEOUT_SECONDS = 30.0  # generous; typical inference is <1s on RTX 4090
 
 # -----------------------------------------------------------------------------
 # Configuration: load world state and NPC profiles from disk on startup.
@@ -105,9 +114,51 @@ def construct_prompt(npc_id: str, utterance: str) -> str:
 def _stub_llm_call(prompt: str, utterance: str) -> str:
     """
     Day 3 stub. Returns a hardcoded response for testing the round-trip.
-    On Day 5 this function is replaced with a real llama.cpp HTTP request.
+    Kept in the file for offline testing when llama-server is not running.
     """
     return f"[stub] You said: {utterance}"
+
+
+async def _call_llama_server(prompt: str) -> str:
+    """
+    Send the constructed prompt to llama-server and return the model's response.
+
+    Uses the OpenAI-compatible /v1/chat/completions endpoint. The full prompt
+    is sent as a single user message — we deliberately do not split into
+    system/user roles here, because the gating architecture has already done
+    its job by the time the prompt is constructed: tier-restricted facts are
+    structurally absent. The LLM's role is generation, not gatekeeping.
+    """
+    payload = {
+        "model": "local",  # llama-server ignores this field; included for OpenAI compat
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.7,
+        "max_tokens": 200,
+    }
+
+    async with httpx.AsyncClient(timeout=LLAMA_REQUEST_TIMEOUT_SECONDS) as client:
+        try:
+            llm_response = await client.post(LLAMA_SERVER_URL, json=payload)
+            llm_response.raise_for_status()
+        except httpx.RequestError as exc:
+            raise HTTPException(
+                status_code=503,
+                detail=f"LLM server unreachable: {exc}",
+            )
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(
+                status_code=502,
+                detail=f"LLM server returned error: {exc.response.status_code} {exc.response.text}",
+            )
+
+    data = llm_response.json()
+    try:
+        return data["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError) as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"LLM response malformed: {exc}",
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -134,17 +185,18 @@ def root():
 
 @app.post("/dialogue", response_model=DialogueResponse)
 async def dialogue(request: DialogueRequest):
-    print(f"[REQUEST] npc_id={request.npc_id!r} utterance={request.utterance!r}")
     """
     Main endpoint. Receives an NPC id and player utterance, returns the NPC's
     response.
     """
+    print(f"[REQUEST] npc_id={request.npc_id!r} utterance={request.utterance!r}")
+
     try:
         prompt = construct_prompt(request.npc_id, request.utterance)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-    response_text = _stub_llm_call(prompt, request.utterance)
+    response_text = await _call_llama_server(prompt)
 
     return DialogueResponse(
         response=response_text,
