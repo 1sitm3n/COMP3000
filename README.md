@@ -1,5 +1,7 @@
 # Numen: Knightfall
 
+https://youtu.be/iz1Lteh5YkE
+
 > **Knowledge-Gated LLM Dialogue for Non-Player Characters in Interactive Game Worlds**
 > A vertical-slice tech demo and reference implementation of *structural knowledge gating* for LLM-driven NPCs.
 
